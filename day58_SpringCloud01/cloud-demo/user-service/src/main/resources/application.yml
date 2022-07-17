@@ -1,0 +1,30 @@
+server:
+  port: 8081
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/cloud_user?useSSL=false
+    username: root
+    password: root
+    driver-class-name: com.mysql.jdbc.Driver
+  application:
+    name: userservice
+  cloud:
+    nacos:
+      server-addr: localhost:8848 # 设置指定将来我们这个userservice向nacos进行注册和发现的地址
+      discovery:
+        cluster-name: HZ # 集群的名称HZ 杭州（这台机器属于杭州这个集群）
+        namespace: dev #设置为注册到dev环境
+        ephemeral: false # 设置为非零时
+mybatis:
+  type-aliases-package: cn.itcast.user.pojo
+  configuration:
+    map-underscore-to-camel-case: true
+logging:
+  level:
+    cn.itcast: debug
+  pattern:
+    dateformat: MM-dd HH:mm:ss:SSS
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://127.0.0.1:10086/eureka # 注册到eurekaserver的地址

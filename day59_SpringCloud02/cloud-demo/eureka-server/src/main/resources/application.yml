@@ -1,0 +1,9 @@
+server:
+  port: 10086
+spring:
+  application:
+    name: eureka-server
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:10086/eureka  # 发布注册的时候使用的注册地址 （客户端（服务提供者 服务消费者将来需要根据这个地址进行注册））

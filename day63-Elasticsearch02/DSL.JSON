@@ -1,0 +1,521 @@
+# 发送请求 查询所有的数据 select * from xxx
+# 这种语句：DSL语句类似于SQL
+GET _search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+# 分词器 实现分词效果的演示  ES内置的默认的分词器standard  默认的分词器 不支持中文分词
+POST /_analyze
+{
+  "text": "lucene is a java language 中国共产党伟大祖国",
+  "analyzer": "cjk"
+}
+
+# 使用第三方的中文分词器 ik分词器 使用它
+# 他的分词效果优秀 将不是一个词变成一个词，还可以 将一个词停用掉。
+
+# 分词器有两种： ik_smart ik_max_word
+
+
+
+
+
+POST /_analyze
+{
+  "text": "传智播客 程序员 耗子尾汁 台湾",
+  "analyzer": "ik_max_word"
+}
+
+# 创建索引 并同时建立映射（对文档中的字段进行约束）
+# 创建了索引库库名称叫heima
+# 建立映射 具体的字段有：info  email name
+
+PUT /heima
+{
+  "mappings": {
+    "properties": {
+      "info":{
+        "type": "text",
+        "analyzer": "ik_smart",
+        "index": true
+      },
+      "email":{
+        "type": "keyword",
+        "index": false
+      },
+      "name":{
+        "properties": {
+          "firstName": {
+            "type": "keyword"
+          }
+        }
+      }
+     
+    }
+  }
+}
+# 查看索引
+GET /heima
+
+HEAD /heima
+
+
+# 增加一个新的字段
+PUT /heima/_mapping
+{
+  "properties": {
+    "age":{
+      "type": "integer"
+    }
+  }
+}
+
+# 删除索引
+DELETE /heima
+
+# 文档进行操作（添加文档 删除文档 更新文档 查询文档）
+
+# 添加文档  _id 就是文档的唯一标识  如果没有手动的进行字段的映射 ES会自动的进行映射
+POST /heima/_doc/1
+{
+  "email":"laoliu@itcast.cn",
+  "info":"info信息",
+  "name":{
+    "firstName":"zhao",
+    "lastName":"yun"
+  }
+}
+#根据文档的唯一标识查询文档
+GET /heima/_doc/1
+
+
+# 我想更新一部分字段的值 不想更新全部
+POST /heima/_update/1
+{
+ 
+  "doc": {
+    "info":"gaigaigai"
+  }
+  
+}
+
+# 删除
+DELETE /heima/_doc/1
+
+
+PUT /hotel
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long"
+      },
+      "name":{
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "copy_to": "all"
+      },
+      "address":{
+        "type": "keyword",
+        "index": false
+      },
+      "price":{
+        "type": "integer"
+      },
+      "score":{
+        "type": "integer"
+      },
+      "brand":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "city":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "starName":{
+        "type": "keyword"
+      },
+      "business":{
+        "type": "keyword"
+      },
+      "location":{
+        "type": "geo_point"
+      },
+      "pic":{
+        "type": "keyword",
+        "index": false
+      },
+      "all":{
+        "type": "text",
+        "analyzer": "ik_max_word"
+      }
+    }
+  }
+}
+
+# 酒店相关
+GET /hotel/_doc/36934
+
+
+
+# ==========================================day02==================================
+
+# 查询所有 语法
+GET /_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+# 查询某一个索引下的所有的数据
+POST /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+# 匹配查询  match 查询。 
+# 先对搜索的文本进行分词，再去倒排索引结构中获取词对应的内容合并 只能针对一个字段搜索
+
+GET /hotel/_search
+{
+  "query": {
+    "match": {
+      "name": "上海 我喜欢的 宝山"
+    }
+  }
+}
+
+GET /hotel
+
+
+# 多字段匹配查询  multi match 查询 
+# 先分词 再从倒排索引结构中获取词对应的文档列表 查询出来 针对多个字段进行查询
+
+GET /hotel/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "我要查询的内容 深圳",
+      "fields": ["name","city"]
+    }
+    
+  }
+}
+
+# 词条查询   特点 针对的是 搜索的内容 不分词 去从倒排索引结构中获取对应的数据
+
+# 我要找 城市 是深圳的酒店
+
+GET /hotel/_search
+{
+  "query": {
+    "term": {
+      "city": {
+        "value": "深圳"
+      }
+    }
+  }
+}
+
+# 范围查询 一般针对数字类型的
+
+# 查询 价格 在100-200 之间的酒店
+
+GET /hotel/_search
+{
+  "query": {
+    "range": {
+      "price": {
+        "gte": 100,
+        "lte": 200
+      }
+    }
+  }
+}
+
+# 地理位置坐标的查询  附近的酒店（以某一个位置为圆心 距离 为半径 圆圈内的所有的酒店查询出来）,
+GET /hotel/_search
+{
+  "query": {
+     "geo_distance":{
+       "distance":"5km",
+       "location":"22.581757,113.918901"
+     }
+  }
+}
+
+# bool查询 将多个查询条件 进行组合 执行查询
+# 组合的方式有
+# MUST 必须满足  AND  参与算分 效率低 文档匹配度高
+# SHOULD 应该满足 OR
+# MUST_NOT 必须不满足 NOT
+# FILTER 必须要满足  不参与算法 效率高 文档的匹配度低
+
+# 默认的情况下 每一篇文档 都会有一个分值 分值越高的越排在前面
+
+# 查询城市在深圳 【并且】 价格在100-200 酒店
+GET /hotel/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "city": {
+              "value": "深圳"
+            }
+          }
+        },
+        {
+          "range": {
+            "price": {
+              "gte": 100,
+              "lte": 200
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+# 相关度算法
+
+GET /hotel/_search
+{
+  "query": {
+    "match": {
+      "name": "虹桥如家"
+    }
+  }
+}
+
+# function_score
+GET /hotel/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "name": "虹桥如家"
+        }
+      },
+      "functions": [
+        {
+          "filter": {
+            "term": {
+              "id": 200215286
+            }
+          }, 
+          "weight": 10
+        }
+      ],
+      "boost_mode": "multiply"
+    }
+  }
+}
+
+# 普通字段的排序
+
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "sort": [
+    {
+      "score": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+# 地理位置坐标的排序
+
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "sort": [
+    {
+     "_geo_distance": {
+       "location":"22.581757,113.918901",
+       "unit": "km", 
+       "order": "asc"
+     }
+    }
+  ]
+}
+
+# 分页
+# from (page-1)*rows size:rows
+
+GET /hotel/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 0,
+  "size": 2
+}
+
+#高亮 1.指定高亮的字段 2 指定高亮的前缀和后缀
+# 默认的情况下要求搜索的字段和高亮的字段必须一致，不一致的不高亮
+GET /hotel/_search
+{
+  "query": {
+    "match": {
+      "name": "虹桥"
+    }
+  },
+  "highlight": {
+    "require_field_match": "false", 
+    "fields": {
+      "name": {},
+      "city": {}
+    },
+    
+    "pre_tags": "<em style='color:red'>",
+    "post_tags": "</em>"
+  }
+}
+
+GET /hotel/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "all": "如家"
+          }
+        },{
+          "term": {
+            "city": {
+              "value": "深圳"
+            }
+          }
+        },{
+          "term": {
+            "starName": {
+              "value": "五星"
+            }
+          }
+        },{
+          "term": {
+            "brand": {
+              "value": "如家"
+            }
+          }
+        },{
+          "range": {
+            "price": {
+              "gte": 0,
+              "lte": 100
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+# 用来模拟 交钱了
+POST /hotel/_update/1902197537
+{
+    "doc": {
+        "isAD": true
+    }
+}
+POST /hotel/_update/2056126831
+{
+    "doc": {
+        "isAD": true
+    }
+}
+POST /hotel/_update/1989806195
+{
+    "doc": {
+        "isAD": true
+    }
+}
+POST /hotel/_update/2056105938
+{
+    "doc": {
+        "isAD": true
+    }
+}
+
+GET /hotel/_doc/2056105938
+
+
+
+GET /hotel/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "name": "酒店"
+        }
+      },
+      "functions": [
+        {
+          "filter": {
+            "term": {
+              "isAD": true
+            }
+          }, 
+          "weight": 10
+        }
+      ],
+      "boost_mode": "multiply"
+    }
+  }
+}
+
+
+GET /hotel/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "name": "酒店"
+        }
+      },
+      "functions": [
+        {
+          
+          "weight": 10
+        }
+      ],
+      "boost_mode": "multiply"
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

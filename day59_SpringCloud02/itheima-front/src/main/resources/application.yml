@@ -1,0 +1,5 @@
+server:
+  port: 18089
+spring:
+  application:
+    name: front

@@ -1,0 +1,15 @@
+logging:
+  pattern:
+    dateformat: MM-dd HH:mm:ss:SSS
+spring:
+  application:
+    name: consumer
+  rabbitmq:
+    host: 192.168.211.132
+    port: 5672
+    virtual-host: /
+    username: itcast
+    password: 123321
+    listener:
+      simple:
+        prefetch: 1 # 设置 每一个消费者预取1个消息 处理完成之后再去获取

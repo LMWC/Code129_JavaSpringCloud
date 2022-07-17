@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试</title>
+    <script src="/js/vue.js"></script>
+    <script src="/js/axios.js"></script>
+</head>
+<body>
+<div id="app">
+    <button @click="getInfo()">点我</button>
+    <span>文章的Id的值：{{articleId}}</span>
+
+</div>
+</body>
+<script>
+    var app = new Vue({
+        el:"#app",
+        data:{
+            "articleId":""
+        },
+        methods:{
+            getInfo:function () {
+                axios.get("http://localhost:10010/user/1?authorization=admin").then(
+                    function (response) {
+                        //打印返回的数据
+                        console.log(response.data);
+                    }
+                )
+            }
+        }
+    })
+</script>
+
+</html>
